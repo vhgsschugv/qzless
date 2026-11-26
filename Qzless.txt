@@ -1,0 +1,1191 @@
+--[[ ====================================================
+     Qzless  UI + Angel Aura  (Premium UI 版)
+==================================================== ]]
+
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+pcall(function()
+    for _, v in pairs(CoreGui:GetChildren()) do
+        if v.Name == "Qzless_UI" or v.Name == "Qzless_ESP" then v:Destroy() end
+    end
+end)
+
+-- ==========================================
+-- 🌟 UI 樣式
+-- ==========================================
+local bgColor = Color3.fromRGB(15, 15, 15)
+local borderColor = Color3.fromRGB(45, 45, 45)
+local textColor = Color3.fromRGB(200, 200, 200)
+local accentColor = Color3.fromRGB(70, 110, 170)
+
+local sg = Instance.new("ScreenGui")
+sg.Name = "Qzless_UI"
+sg.ResetOnSpawn = false
+sg.Parent = CoreGui
+
+local Main = Instance.new("Frame", sg)
+Main.Size = UDim2.new(0, 480, 0, 600)
+Main.Position = UDim2.new(0.5, -240, 0.5, -300)
+Main.BackgroundColor3 = bgColor
+Main.BorderSizePixel = 1
+Main.BorderColor3 = borderColor
+Main.Active = true
+Main.Draggable = true
+
+-- ==========================================
+-- 標題欄 (標題稍微置中)
+-- ==========================================
+local TitleBar = Instance.new("Frame", Main)
+TitleBar.Size = UDim2.new(1, 0, 0, 35)
+TitleBar.BackgroundTransparency = 1
+
+local TitleText = Instance.new("TextLabel", TitleBar)
+TitleText.Size = UDim2.new(1, -70, 1, 0)
+TitleText.Position = UDim2.new(0, 20, 0, 0)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "Qzless"
+TitleText.TextColor3 = textColor
+TitleText.Font = Enum.Font.Code
+TitleText.TextSize = 14
+TitleText.TextXAlignment = Enum.TextXAlignment.Center
+
+local BtnContainer = Instance.new("Frame", TitleBar)
+BtnContainer.Size = UDim2.new(0, 56, 0, 20)
+BtnContainer.Position = UDim2.new(1, -60, 0.5, -10)
+BtnContainer.BackgroundTransparency = 1
+
+local UIListLayoutBtn = Instance.new("UIListLayout", BtnContainer)
+UIListLayoutBtn.FillDirection = Enum.FillDirection.Horizontal
+UIListLayoutBtn.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayoutBtn.Padding = UDim.new(0, 4)
+UIListLayoutBtn.HorizontalAlignment = Enum.HorizontalAlignment.Right
+
+local MinimizeBtn = Instance.new("TextButton", BtnContainer)
+MinimizeBtn.Size = UDim2.new(0, 24, 0, 20)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+MinimizeBtn.BorderColor3 = borderColor
+MinimizeBtn.BorderSizePixel = 1
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = textColor
+MinimizeBtn.Font = Enum.Font.Code
+MinimizeBtn.TextSize = 14
+MinimizeBtn.LayoutOrder = 1
+MinimizeBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+end)
+
+local CloseBtn = Instance.new("TextButton", BtnContainer)
+CloseBtn.Size = UDim2.new(0, 24, 0, 20)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+CloseBtn.BorderColor3 = borderColor
+CloseBtn.BorderSizePixel = 1
+CloseBtn.Text = "x"
+CloseBtn.TextColor3 = Color3.fromRGB(220, 80, 80)
+CloseBtn.Font = Enum.Font.Code
+CloseBtn.TextSize = 14
+CloseBtn.LayoutOrder = 2
+
+local Sep = Instance.new("Frame", Main)
+Sep.Size = UDim2.new(1, 0, 0, 1)
+Sep.Position = UDim2.new(0, 0, 0, 35)
+Sep.BackgroundColor3 = borderColor
+
+-- ==========================================
+-- 頁面容器 & Tab
+-- ==========================================
+local PageContainer = Instance.new("Frame", Main)
+PageContainer.Size = UDim2.new(1, -20, 1, -75)
+PageContainer.Position = UDim2.new(0, 10, 0, 75)
+PageContainer.BackgroundTransparency = 1
+
+local pages = {}
+local tabNames = {"main", "players", "esp", "settings", "misc"}
+
+for _, name in ipairs(tabNames) do
+    local p = Instance.new("ScrollingFrame", PageContainer)
+    p.Name = name .. "_Page"
+    p.Size = UDim2.new(1, 0, 1, 0)
+    p.BackgroundTransparency = 1
+    p.BorderSizePixel = 0
+    p.Visible = false
+    p.CanvasSize = UDim2.new(0, 0, 0, 500)
+    p.ScrollBarThickness = 4
+    pages[name] = p
+end
+
+local function SwitchTab(targetName)
+    for name, p in pairs(pages) do
+        p.Visible = (name == targetName)
+    end
+end
+SwitchTab("main")
+
+local TopBar = Instance.new("Frame", Main)
+TopBar.Size = UDim2.new(1, -20, 0, 22)
+TopBar.Position = UDim2.new(0, 10, 0, 42)
+TopBar.BackgroundTransparency = 1
+
+local UIListLayout = Instance.new("UIListLayout", TopBar)
+UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+local function CreateTabButton(name, order)
+    local btn = Instance.new("TextButton", TopBar)
+    btn.Size = UDim2.new(0.2, -4, 1, 0) -- 5個分頁
+    btn.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+    btn.BorderColor3 = borderColor
+    btn.BorderSizePixel = 1
+    btn.Text = name
+    btn.TextColor3 = textColor
+    btn.Font = Enum.Font.Code
+    btn.TextSize = 11
+    btn.LayoutOrder = order
+    btn.MouseButton1Click:Connect(function() SwitchTab(name) end)
+    return btn
+end
+for i, name in ipairs(tabNames) do CreateTabButton(name, i) end
+
+-- ==========================================
+-- 輔助函數
+-- ==========================================
+local function CreateCompactBox(parent, titleText, height, position)
+    local box = Instance.new("Frame", parent)
+    box.Size = UDim2.new(0, 240, 0, height)
+    box.Position = position
+    box.BackgroundColor3 = bgColor
+    box.BorderColor3 = borderColor
+    box.BorderSizePixel = 1
+    local title = Instance.new("TextLabel", box)
+    title.Size = UDim2.new(0, 0, 0, 16)
+    title.Position = UDim2.new(0, 10, 0, -8)
+    title.BackgroundColor3 = bgColor
+    title.BorderColor3 = borderColor
+    title.BorderSizePixel = 1
+    title.Text = "  " .. titleText .. "  "
+    title.TextColor3 = textColor
+    title.Font = Enum.Font.Code
+    title.TextSize = 11
+    title.AutomaticSize = Enum.AutomaticSize.X
+    return box
+end
+
+local function MakeCheckWithKeybindAndInput(par, txt, y, checked, hasInput, defaultInputVal, callback, inputCallback, noKeybind)
+    local btn = Instance.new("TextButton", par)
+    btn.Size = UDim2.new(1, -16, 0, 24)
+    btn.Position = UDim2.new(0, 8, 0, y)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    local box = Instance.new("Frame", btn)
+    box.Size = UDim2.new(0, 12, 0, 12)
+    box.Position = UDim2.new(0, 0, 0.5, -6)
+    box.BackgroundColor3 = checked and accentColor or bgColor
+    box.BorderSizePixel = 1
+    box.BorderColor3 = borderColor
+    local lbl = Instance.new("TextLabel", btn)
+    lbl.Size = UDim2.new(0, 0, 1, 0)
+    lbl.Position = UDim2.new(0, 20, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = txt
+    lbl.TextColor3 = textColor
+    lbl.Font = Enum.Font.Code
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.AutomaticSize = Enum.AutomaticSize.X
+
+    local keyBtn = nil
+    local inputBox = nil
+
+    if not noKeybind then
+        keyBtn = Instance.new("TextButton", btn)
+        keyBtn.Size = UDim2.new(0, 32, 0, 18)
+        keyBtn.Position = UDim2.new(0, 108, 0.5, -9)
+        keyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        keyBtn.BorderColor3 = borderColor
+        keyBtn.BorderSizePixel = 1
+        keyBtn.Text = "..."
+        keyBtn.TextColor3 = textColor
+        keyBtn.Font = Enum.Font.Code
+        keyBtn.TextSize = 10
+
+        if hasInput then
+            inputBox = Instance.new("TextBox", btn)
+            inputBox.Size = UDim2.new(0, 40, 0, 18)
+            inputBox.Position = UDim2.new(0, 144, 0.5, -9)
+            inputBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            inputBox.BorderColor3 = borderColor
+            inputBox.BorderSizePixel = 1
+            inputBox.Text = tostring(defaultInputVal)
+            inputBox.TextColor3 = textColor
+            inputBox.Font = Enum.Font.Code
+            inputBox.TextSize = 10
+            inputBox.FocusLost:Connect(function()
+                local num = tonumber(inputBox.Text)
+                if num and inputCallback then inputCallback(num) end
+            end)
+        end
+
+        task.spawn(function()
+            task.wait()
+            if lbl and keyBtn then
+                local offset = 20 + lbl.AbsoluteSize.X + 15 + 8
+                keyBtn.Position = UDim2.new(0, offset, 0.5, -9)
+                if inputBox then inputBox.Position = UDim2.new(0, offset + 36 + 8, 0.5, -9) end
+            end
+        end)
+    end
+
+    local boundKey = nil
+    local waitingForKey = false
+    local isChecked = checked
+
+    if keyBtn then
+        keyBtn.MouseButton1Click:Connect(function()
+            waitingForKey = true
+            keyBtn.Text = "..."
+        end)
+    end
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if waitingForKey then
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                boundKey = input.KeyCode
+                keyBtn.Text = boundKey.Name
+                waitingForKey = false
+            end
+        elseif boundKey and not gameProcessed and input.KeyCode == boundKey then
+            isChecked = not isChecked
+            box.BackgroundColor3 = isChecked and accentColor or bgColor
+            if callback then callback(isChecked) end
+        end
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        if not waitingForKey then
+            isChecked = not isChecked
+            box.BackgroundColor3 = isChecked and accentColor or bgColor
+            if callback then callback(isChecked) end
+        end
+    end)
+end
+
+local function MakeSimpleCheck(par, txt, y, checked, callback)
+    local btn = Instance.new("TextButton", par)
+    btn.Size = UDim2.new(1, -16, 0, 24)
+    btn.Position = UDim2.new(0, 8, 0, y)
+    btn.BackgroundTransparency = 1
+    btn.Text = ""
+    local box = Instance.new("Frame", btn)
+    box.Size = UDim2.new(0, 12, 0, 12)
+    box.Position = UDim2.new(0, 0, 0.5, -6)
+    box.BackgroundColor3 = checked and accentColor or bgColor
+    box.BorderSizePixel = 1
+    box.BorderColor3 = borderColor
+    local lbl = Instance.new("TextLabel", btn)
+    lbl.Size = UDim2.new(1, -20, 1, 0)
+    lbl.Position = UDim2.new(0, 20, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = txt
+    lbl.TextColor3 = textColor
+    lbl.Font = Enum.Font.Code
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    local isChecked = checked
+    btn.MouseButton1Click:Connect(function()
+        isChecked = not isChecked
+        box.BackgroundColor3 = isChecked and accentColor or bgColor
+        if callback then callback(isChecked) end
+    end)
+end
+
+local function MakeColorPicker(par, y, defColor, callback)
+    local container = Instance.new("Frame", par)
+    container.Size = UDim2.new(1, -16, 0, 30)
+    container.Position = UDim2.new(0, 8, 0, y)
+    container.BackgroundTransparency = 1
+    local lbl = Instance.new("TextLabel", container)
+    lbl.Size = UDim2.new(1, 0, 0, 14)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = "Color"
+    lbl.TextColor3 = textColor
+    lbl.Font = Enum.Font.Code
+    lbl.TextSize = 11
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    local track = Instance.new("TextButton", container)
+    track.Size = UDim2.new(1, 0, 0, 12)
+    track.Position = UDim2.new(0, 0, 0, 16)
+    track.BackgroundColor3 = Color3.new(1, 1, 1)
+    track.BorderSizePixel = 0
+    track.Text = ""
+    track.AutoButtonColor = false
+    track.ClipsDescendants = true
+    local trackGrad = Instance.new("UIGradient", track)
+    trackGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 0, 0))
+    })
+    local knob = Instance.new("Frame", track)
+    knob.Size = UDim2.new(0, 6, 1, 4)
+    knob.Position = UDim2.new(0, -3, 0.5, -2)
+    knob.BackgroundColor3 = defColor
+    knob.BorderColor3 = Color3.new(0, 0, 0)
+    knob.BorderSizePixel = 1
+    local dragging = false
+    local function update(input)
+        local rx = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+        knob.Position = UDim2.new(rx, -3, 0.5, -2)
+        local color = Color3.fromHSV(rx, 1, 1)
+        knob.BackgroundColor3 = color
+        if callback then callback(color) end
+    end
+    track.MouseButton1Down:Connect(function()
+        dragging = true
+        local mouse = UserInputService:GetMouseLocation()
+        update(mouse)
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then update(input) end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+end
+
+-- ==========================================
+-- ESP
+-- ==========================================
+local EspEnabled = false
+local EspRainbow = false
+local espColor = Color3.fromRGB(255, 0, 0)
+
+local espGui = Instance.new("ScreenGui")
+espGui.Name = "Qzless_ESP"
+espGui.ResetOnSpawn = false
+espGui.Parent = CoreGui
+
+Players.PlayerRemoving:Connect(function(player)
+    local box = espGui:FindFirstChild(player.Name)
+    if box then box:Destroy() end
+end)
+
+local function OnCharacterAdded(character)
+    local player = Players:GetPlayerFromCharacter(character)
+    if player then
+        local hum = character:WaitForChild("Humanoid", 5)
+        if hum then
+            hum.Died:Connect(function()
+                local box = espGui:FindFirstChild(player.Name)
+                if box then box:Destroy() end
+            end)
+        end
+        character.AncestryChanged:Connect(function()
+            if not character:IsDescendantOf(workspace) then
+                local box = espGui:FindFirstChild(player.Name)
+                if box then box:Destroy() end
+            end
+        end)
+    end
+end
+
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LP then
+        if p.Character then OnCharacterAdded(p.Character) end
+        p.CharacterAdded:Connect(OnCharacterAdded)
+    end
+end
+Players.PlayerAdded:Connect(function(p)
+    p.CharacterAdded:Connect(OnCharacterAdded)
+end)
+
+RunService.RenderStepped:Connect(function()
+    if not EspEnabled then
+        for _, v in pairs(espGui:GetChildren()) do
+            if v:IsA("Frame") then v.Visible = false end
+        end
+        return
+    end
+    local finalColor = espColor
+    if EspRainbow then
+        local hue = (tick() % 2) / 2
+        finalColor = Color3.fromHSV(hue, 1, 1)
+    end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character then
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            local box = espGui:FindFirstChild(p.Name)
+            if hum and hum.Health > 0 then
+                local minX, maxX = math.huge, -math.huge
+                local minY, maxY = math.huge, -math.huge
+                local minZ, maxZ = math.huge, -math.huge
+                local validParts = 0
+                for _, part in pairs(p.Character:GetChildren()) do
+                    if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" and part.Transparency < 1 then
+                        local pos = part.Position
+                        local size = part.Size / 2
+                        minX = math.min(minX, pos.X - size.X)
+                        maxX = math.max(maxX, pos.X + size.X)
+                        minY = math.min(minY, pos.Y - size.Y)
+                        maxY = math.max(maxY, pos.Y + size.Y)
+                        minZ = math.min(minZ, pos.Z - size.Z)
+                        maxZ = math.max(maxZ, pos.Z + size.Z)
+                        validParts = validParts + 1
+                    end
+                end
+                if validParts > 0 then
+                    local corners = {
+                        Vector3.new(minX, minY, minZ), Vector3.new(maxX, minY, minZ),
+                        Vector3.new(minX, maxY, minZ), Vector3.new(maxX, maxY, minZ),
+                        Vector3.new(minX, minY, maxZ), Vector3.new(maxX, minY, maxZ),
+                        Vector3.new(minX, maxY, maxZ), Vector3.new(maxX, maxY, maxZ)
+                    }
+                    local minScreenX, maxScreenX = math.huge, -math.huge
+                    local minScreenY, maxScreenY = math.huge, -math.huge
+                    local allOnScreen = true
+                    for _, corner in ipairs(corners) do
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(corner)
+                        if onScreen and screenPos.Z > 0 then
+                            if screenPos.X < minScreenX then minScreenX = screenPos.X end
+                            if screenPos.X > maxScreenX then maxScreenX = screenPos.X end
+                            if screenPos.Y < minScreenY then minScreenY = screenPos.Y end
+                            if screenPos.Y > maxScreenY then maxScreenY = screenPos.Y end
+                        else
+                            allOnScreen = false
+                        end
+                    end
+                    if allOnScreen and minScreenX < math.huge then
+                        if not box then
+                            box = Instance.new("Frame", espGui)
+                            box.Name = p.Name
+                            box.BackgroundTransparency = 1
+                            box.BorderSizePixel = 0
+                            local stroke = Instance.new("UIStroke", box)
+                            stroke.Thickness = 1.5
+                        end
+                        box:FindFirstChildOfClass("UIStroke").Color = finalColor
+                        local width = maxScreenX - minScreenX
+                        local height = maxScreenY - minScreenY
+                        local padding = 6
+                        box.Size = UDim2.new(0, width + padding * 2, 0, height + padding * 2)
+                        box.Position = UDim2.new(0, minScreenX - padding, 0, minScreenY - padding)
+                        box.Visible = true
+                    else
+                        if box then box.Visible = false end
+                    end
+                end
+            else
+                if box then box.Visible = false end
+            end
+        end
+    end
+end)
+
+-- ==========================================
+-- Angel Aura 引擎
+-- ==========================================
+local AuraEngine = {}
+local auraState = {
+    loaded = false, tree = nil, instances = {}, baseValues = {},
+    roots = {}, rig = nil, currentName = nil, connections = {},
+}
+
+local BONE_MAP = {
+    Head = { "Head" }, UpperTorso = { "UpperTorso", "Torso" },
+    LowerTorso = { "LowerTorso" },
+    RightUpperArm = { "RightUpperArm", "Right Arm" }, RightLowerArm = { "RightLowerArm", "Right Arm" },
+    RightHand = { "RightHand", "Right Arm" },
+    LeftUpperArm = { "LeftUpperArm", "Left Arm" }, LeftLowerArm = { "LeftLowerArm", "Left Arm" },
+    LeftHand = { "LeftHand", "Left Arm" },
+    RightUpperLeg = { "RightUpperLeg", "Right Leg" }, RightLowerLeg = { "RightLowerLeg", "Right Leg" },
+    LeftUpperLeg = { "LeftUpperLeg", "Left Leg" }, LeftLowerLeg = { "LeftLowerLeg", "Left Leg" },
+    HumanoidRootPart = { "HumanoidRootPart" }, Torso = { "Torso", "UpperTorso" },
+}
+
+local function newInstance(c)
+    local ok, i = pcall(Instance.new, c)
+    return ok and i or nil
+end
+
+local function applyProp(inst, key, value)
+    local enumType
+    if key == "Material" then enumType = Enum.Material
+    elseif key == "Shape" and inst:IsA("BasePart") then enumType = Enum.PartType
+    elseif key == "Shape" and inst:IsA("ParticleEmitter") then enumType = Enum.ParticleEmitterShape
+    elseif key == "ShapeInOut" then enumType = Enum.ParticleEmitterShapeInOut
+    elseif key == "ShapeStyle" then enumType = Enum.ParticleEmitterShapeStyle
+    elseif key == "EmissionDirection" then enumType = Enum.NormalId
+    elseif key == "Orientation" then enumType = Enum.ParticleOrientation
+    end
+    local resolved = value
+    if type(value) == "string" then
+        local short = value:match("^Enum%.[^.]+%.(.+)$")
+        if short and enumType then resolved = enumType[short] or value end
+    end
+    pcall(function() inst[key] = resolved end)
+end
+
+local function resolveBone(node)
+    for _, name in ipairs(BONE_MAP[node.name] or {}) do
+        local f = auraState.rig:FindFirstChild(name)
+        if f and f:IsA("BasePart") then return f end
+    end
+    return nil
+end
+
+function AuraEngine.Load(tree, character)
+    AuraEngine.Unload()
+    if type(tree) ~= "table" then return false end
+    auraState.tree = tree
+    auraState.rig = character or (LP and LP.Character)
+    if not auraState.rig then return false end
+    local nodes = tree.nodes or {}
+    local byId = {}
+    for _, n in ipairs(nodes) do byId[n.id] = n end
+    for _, n in ipairs(nodes) do
+        local inst = newInstance(n.class)
+        if not inst then continue end
+        for k, v in pairs(n.props or {}) do
+            if k ~= "CFrame" then applyProp(inst, k, v) end
+        end
+        auraState.instances[n.id] = inst
+    end
+    for _, n in ipairs(nodes) do
+        local inst = auraState.instances[n.id]
+        if not inst then continue end
+        if n.parent == 0 then
+            local bone = resolveBone(n)
+            if bone then
+                inst.Name = "AuraRoot_" .. n.name
+                inst.CanCollide, inst.CanTouch, inst.CanQuery = false, false, false
+                inst.Massless, inst.CastShadow, inst.Transparency = true, false, 1
+                inst.CFrame = bone.CFrame
+                inst.Parent = bone
+                local w = Instance.new("WeldConstraint")
+                w.Part0, w.Part1, w.Parent = inst, bone, inst
+                auraState.roots[n.id] = inst
+            end
+        else
+            local p = auraState.instances[n.parent]
+            if p then inst.Parent = p end
+        end
+    end
+    for _, link in ipairs(tree.links or {}) do
+        local beam, a0, a1 = auraState.instances[link[1]], auraState.instances[link[2]], auraState.instances[link[3]]
+        if beam and a0 and a1 then
+            pcall(function() beam.Attachment0 = a0; beam.Attachment1 = a1 end)
+        end
+    end
+    for _, n in ipairs(nodes) do
+        local inst = auraState.instances[n.id]
+        if inst and inst:IsA("Attachment") and n.props and n.props.CFrame then
+            pcall(function() inst.CFrame = n.props.CFrame end)
+        end
+    end
+    auraState.loaded = true
+    auraState.currentName = tree.name
+    print(("[aura] loaded: %s"):format(tostring(tree.name)))
+    return true
+end
+
+function AuraEngine.Unload()
+    for _, inst in pairs(auraState.instances) do
+        if inst and inst.Parent then pcall(function() inst:Destroy() end) end
+    end
+    auraState.instances, auraState.roots, auraState.baseValues = {}, {}, {}
+    auraState.loaded, auraState.tree, auraState.currentName = false, nil, nil
+end
+
+-- ==========================================
+-- TREE 數據（Angel）— 用小工具函數整理，內容與原版一致
+-- ==========================================
+local CYAN = Color3.fromRGB(133, 220, 255)
+local CYAN_SEQ = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, CYAN),
+    ColorSequenceKeypoint.new(1, CYAN),
+})
+
+-- NumberSequence 快速建立：ns({t, v[, envelope]}, ...)
+local function ns(...)
+    local keys = {}
+    for _, k in ipairs({...}) do
+        table.insert(keys, NumberSequenceKeypoint.new(k[1], k[2], k[3] or 0))
+    end
+    return NumberSequence.new(keys)
+end
+
+local function PartNode(id, name, size, cf, canCollide, color)
+    return { id = id, parent = 0, class = "Part", name = name, props = {
+        Size = size, Color = color or Color3.fromRGB(127, 127, 127),
+        Material = Enum.Material.Plastic, Transparency = 1, Reflectance = 0,
+        CastShadow = true, Shape = Enum.PartType.Block, Anchored = false,
+        CanCollide = canCollide, CanQuery = true, CanTouch = true, Massless = false,
+        CFrame = cf,
+    } }
+end
+
+local function AttNode(id, parent, name, cf)
+    return { id = id, parent = parent, class = "Attachment", name = name, props = {
+        CFrame = cf, Visible = false,
+    } }
+end
+
+local function BeamNode(id, parent)
+    return { id = id, parent = parent, class = "Beam", name = "Beam", props = {
+        Brightness = 10, Color = CYAN_SEQ,
+        CurveSize0 = 0, CurveSize1 = 0, Enabled = true, FaceCamera = false,
+        LightEmission = 1, LightInfluence = 0, Segments = 10,
+        Texture = "http://www.roblox.com/asset/?id=5059527230", TextureLength = 0.1,
+        TextureMode = Enum.TextureMode.Stretch, TextureSpeed = 1,
+        Transparency = ns({0, 1}, {0.5, 0.9}, {1, 1}),
+        Width0 = 2, Width1 = 2, ZOffset = 0.1,
+    } }
+end
+
+local function EmitterNode(id, parent, name, o)
+    local props = {
+        Acceleration = Vector3.new(0, 0, 0), Brightness = 2, Color = CYAN_SEQ,
+        Drag = 0, EmissionDirection = Enum.NormalId.Top, Enabled = true,
+        FlipbookFramerate = NumberRange.new(1, 1), FlipbookLayout = Enum.ParticleFlipbookLayout.None,
+        FlipbookMode = Enum.ParticleFlipbookMode.Loop, FlipbookStartRandom = false,
+        Lifetime = NumberRange.new(1, 1), LightEmission = 1, LightInfluence = 0,
+        LockedToPart = true, Orientation = Enum.ParticleOrientation.VelocityPerpendicular,
+        Rate = 7, RotSpeed = NumberRange.new(0, 0), Rotation = NumberRange.new(0, 360),
+        Shape = Enum.ParticleEmitterShape.Box, ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward,
+        ShapePartial = 1, ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume,
+        Size = ns({0, 1}, {1, 1}),
+        SpreadAngle = Vector2.new(5, 5), Speed = NumberRange.new(0.001, 0.001),
+        Squash = ns({0, 0}, {1, 0}),
+        Texture = "", TimeScale = 1,
+        Transparency = ns({0, 1}, {0.2, 0}, {0.8, 0}, {1, 1}),
+        VelocityInheritance = 0, VelocitySpread = 5, WindAffectsDrag = false, ZOffset = 0,
+    }
+    for k, v in pairs(o) do props[k] = v end
+    return { id = id, parent = parent, class = "ParticleEmitter", name = name, props = props }
+end
+
+local ID_CF = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+local BEAM_END_CF = CFrame.new(0, 0, 2, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+local CF_B1 = CFrame.new(0.5, -1, 0, 1, 0, -0, 0, 0, 1, 0, -1, 0)
+local CF_B2 = CFrame.new(-0.5, -1, 0, -1, 0, 0, 0, 0, 1, 0, 1, -0)
+local CF_B3 = CFrame.new(0, -1, -0.5, 0, -1, 0, 0, 0, 1, -1, 0, 0)
+local CF_B4 = CFrame.new(0, -1, 0.5, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+local RING_TEX = "rbxassetid://8819682608"
+local WING_TEX = "http://www.roblox.com/asset/?id=13267054240"
+local WING_COMMON = {
+    Brightness = 1, Rate = 4, Rotation = NumberRange.new(-15, -15),
+    Size = ns({0, 2.75}, {1, 3.5}), SpreadAngle = Vector2.new(0, 0),
+    Speed = NumberRange.new(0.05, 0.05), Texture = WING_TEX,
+    Transparency = ns({0, 0.944444}, {0.2, 0}, {0.8, 0}, {1, 1}),
+    VelocitySpread = 0,
+}
+local function wingProps(dir)
+    local t = {}
+    for k, v in pairs(WING_COMMON) do t[k] = v end
+    t.EmissionDirection = dir
+    return t
+end
+local FLOOR_SIZE_BIG = ns({0, 0}, {0.3, 2}, {0.6, 5}, {0.8, 8}, {1, 12})
+local FLOOR_SIZE_SMALL = ns({0, 0}, {0.3, 1}, {0.6, 2.5}, {0.8, 4}, {1, 6})
+
+local TREE = {
+    name = "angel",
+    nodes = {
+        -- Head
+        PartNode(1, "Head", Vector3.new(2, 1, 1), CFrame.new(158.375, -210.449, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), true),
+        AttNode(2, 1, "Halo", CFrame.new(-0.25, 0.933013, 0.25882, 0.965932, -0.249973, 0.0670034, 0.258797, 0.933026, -0.249973, -2.93739e-05, 0.258797, 0.965932)),
+        EmitterNode(3, 2, "Ring2", {
+            RotSpeed = NumberRange.new(-400, 400), Size = ns({0, 2}, {1, 3}), Texture = RING_TEX,
+        }),
+        EmitterNode(4, 2, "Ring1", {
+            RotSpeed = NumberRange.new(-400, 400), Size = ns({0, 2.5}, {1, 3}), Texture = RING_TEX,
+        }),
+
+        -- RightUpperArm
+        PartNode(5, "RightUpperArm", Vector3.new(1, 2, 1), CFrame.new(156.875, -211.949, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), false),
+        AttNode(6, 5, "Beam1", CF_B1),
+        BeamNode(7, 6),
+        AttNode(8, 6, "Attachment", BEAM_END_CF),
+        AttNode(9, 5, "Beam3", CF_B3),
+        BeamNode(10, 9),
+        AttNode(11, 9, "Attachment", BEAM_END_CF),
+        AttNode(12, 5, "Beam2", CF_B2),
+        BeamNode(13, 12),
+        AttNode(14, 12, "Attachment", BEAM_END_CF),
+        AttNode(15, 5, "Beam4", CF_B4),
+        AttNode(16, 15, "Attachment", BEAM_END_CF),
+        BeamNode(17, 15),
+
+        -- UpperTorso
+        PartNode(18, "UpperTorso", Vector3.new(2, 2, 1), CFrame.new(158.375, -211.949, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), true),
+        AttNode(19, 18, "Center", ID_CF),
+        EmitterNode(20, 19, "Ambient", {
+            FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4,
+            FlipbookMode = Enum.ParticleFlipbookMode.OneShot,
+            Lifetime = NumberRange.new(2, 2), Orientation = Enum.ParticleOrientation.FacingCamera,
+            Rate = 5, Size = ns({0, 3}, {1, 4}),
+            SpreadAngle = Vector2.new(180, 180), Speed = NumberRange.new(0.5, 0.5),
+            Texture = "rbxassetid://11402221943",
+            Transparency = ns({0, 1}, {0.5, 0.3}, {1, 1}),
+            VelocitySpread = 180,
+        }),
+        AttNode(21, 18, "LeftWing", CFrame.new(-2, 0.5, 1, 0.96593, 0, 0.258805, 0, 1, -0, -0.258805, 0, 0.96593)),
+        EmitterNode(22, 21, "Wing", wingProps(Enum.NormalId.Back)),
+        AttNode(23, 18, "RightWing", CFrame.new(2, 0.5, 1, 0.96593, 0, -0.258805, 0, 1, 0, 0.258805, 0, 0.96593)),
+        EmitterNode(24, 23, "Wing", wingProps(Enum.NormalId.Front)),
+
+        -- LeftUpperArm
+        PartNode(25, "LeftUpperArm", Vector3.new(1, 2, 1), CFrame.new(159.875, -211.949, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), false),
+        AttNode(26, 25, "Beam3", CF_B3),
+        AttNode(27, 26, "Attachment", BEAM_END_CF),
+        BeamNode(28, 26),
+        AttNode(29, 25, "Beam4", CF_B4),
+        BeamNode(30, 29),
+        AttNode(31, 29, "Attachment", BEAM_END_CF),
+        AttNode(32, 25, "Beam2", CF_B2),
+        AttNode(33, 32, "Attachment", BEAM_END_CF),
+        BeamNode(34, 32),
+        AttNode(35, 25, "Beam1", CF_B1),
+        BeamNode(36, 35),
+        AttNode(37, 35, "Attachment", BEAM_END_CF),
+
+        -- RightUpperLeg
+        PartNode(38, "RightUpperLeg", Vector3.new(1, 2, 1), CFrame.new(157.875, -213.949, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), false),
+
+        -- HumanoidRootPart + Floor effects
+        PartNode(39, "HumanoidRootPart", Vector3.new(2, 2, 1), CFrame.new(158.375, -211.949, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), false, Color3.fromRGB(163, 162, 165)),
+        AttNode(40, 39, "Floor", CFrame.new(0, -2.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)),
+        EmitterNode(41, 40, "Ambient1", {
+            Lifetime = NumberRange.new(2, 2), Rate = 20, RotSpeed = NumberRange.new(-40, 40),
+            Size = FLOOR_SIZE_BIG, SpreadAngle = Vector2.new(0.001, 0.001),
+            Squash = ns({0, 0}, {1, 0, 0.2}),
+            Texture = "rbxassetid://7216855136",
+            Transparency = ns({0, 1}, {0.2, 0.3}, {1, 1}),
+            VelocitySpread = 0.001,
+        }),
+        EmitterNode(42, 40, "Ambient2", {
+            Lifetime = NumberRange.new(2, 2), Rate = 20, RotSpeed = NumberRange.new(-600, 600),
+            Size = FLOOR_SIZE_SMALL, SpreadAngle = Vector2.new(0.001, 0.001),
+            Squash = ns({0, 0}, {1, 0, 0.2}),
+            Texture = "https://assetgame.roblox.com/asset/?id=12713358087&assetName=crescent",
+            Transparency = ns({0, 0}, {1, 1}),
+            VelocitySpread = 0.001,
+        }),
+        EmitterNode(43, 40, "Stars", {
+            Lifetime = NumberRange.new(2, 2), Rate = 20, RotSpeed = NumberRange.new(-30, 30),
+            Size = FLOOR_SIZE_SMALL, SpreadAngle = Vector2.new(0.001, 0.001),
+            Squash = ns({0, 0}, {1, 2}),
+            Texture = "rbxassetid://7216849325",
+            Transparency = ns({0, 0}, {0.6, 0.2}, {1, 1}),
+            VelocitySpread = 0.001,
+        }),
+
+        -- LeftUpperLeg
+        PartNode(44, "LeftUpperLeg", Vector3.new(1, 2, 1), CFrame.new(158.875, -213.949, 49.5779, -1, 0, 0, 0, 1, 0, 0, 0, -1), false),
+    },
+    links = {
+        { 7, 6, 8 }, { 10, 9, 11 }, { 13, 12, 14 }, { 17, 15, 16 },
+        { 28, 26, 27 }, { 30, 29, 31 }, { 34, 32, 33 }, { 36, 35, 37 },
+    },
+}
+
+-- ==========================================
+-- 填充各分頁
+-- ==========================================
+
+-- 【players 分頁】
+local playersPage = pages["players"]
+local gPlayerMod = CreateCompactBox(playersPage, "player modifications", 80, UDim2.new(0, 0, 0, 10))
+local AntiHitEnabled = false
+local antiHitConn = nil
+local AuraEnabled = false
+
+local function startAntiHit()
+    if antiHitConn then return end
+    antiHitConn = RunService.Heartbeat:Connect(function(dt)
+        if not AntiHitEnabled then return end
+        local char = LP.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if not hrp or not hum or hum.Health <= 0 then return end
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        if hum.MoveDirection.Magnitude < 0.1 and hum.FloorMaterial ~= Enum.Material.Air then
+            hrp.AssemblyLinearVelocity = Vector3.zero
+        end
+        hrp.AssemblyAngularVelocity = Vector3.zero
+        hrp.RotVelocity = Vector3.zero
+        local pos = hrp.Position
+        local rot = CFrame.Angles(math.rad(180), tick() * 30, 0)
+        hrp.CFrame = CFrame.new(pos.X, pos.Y, pos.Z) * rot
+    end)
+end
+local function stopAntiHit()
+    AntiHitEnabled = false
+    if antiHitConn then antiHitConn:Disconnect(); antiHitConn = nil end
+    local char = LP.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true) end
+end
+
+MakeCheckWithKeybindAndInput(gPlayerMod, "Anti-Hit", 18, false, false, 0, function(state)
+    AntiHitEnabled = state
+    if state then startAntiHit() else stopAntiHit() end
+end, nil, true)
+
+MakeCheckWithKeybindAndInput(gPlayerMod, "Aura", 45, false, false, 0, function(state)
+    AuraEnabled = state
+    if state then
+        local char = LP.Character or LP.CharacterAdded:Wait()
+        char:WaitForChild("HumanoidRootPart", 10)
+        task.wait(0.25)
+        local ok, r = pcall(AuraEngine.Load, TREE, char)
+        if ok and r then print("[aura] Angel Aura ON")
+        else warn("[aura] load failed: " .. tostring(r)) end
+    else
+        AuraEngine.Unload()
+        print("[aura] Angel Aura OFF")
+    end
+end, nil, true)
+
+LP.CharacterAdded:Connect(function(char)
+    if AuraEnabled then
+        char:WaitForChild("HumanoidRootPart", 10)
+        task.wait(0.25)
+        pcall(AuraEngine.Load, TREE, char)
+    end
+end)
+
+local gMovement = CreateCompactBox(playersPage, "movement", 80, UDim2.new(0, 0, 0, 105))
+local FlyEnabled = false
+local FlySpeed = 50
+local NoclipEnabled = false
+
+RunService.RenderStepped:Connect(function()
+    if FlyEnabled and LP.Character then
+        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
+        local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+        if hrp and hum then
+            hum.PlatformStand = true
+            local moveDir = Vector3.new(0, 0, 0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - Camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + Camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+            hrp.Velocity = moveDir * FlySpeed
+            hrp.RotVelocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+
+MakeCheckWithKeybindAndInput(gMovement, "Fly", 15, false, true, 50, function(state)
+    FlyEnabled = state
+    if not state and LP.Character then
+        local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
+        if hum then hum.PlatformStand = false end
+        if hrp then hrp.Velocity = Vector3.new(0, 0, 0) end
+    end
+end, function(val) FlySpeed = val end)
+
+RunService.Stepped:Connect(function()
+    if LP.Character then
+        for _, part in pairs(LP.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                if NoclipEnabled then
+                    part.CanCollide = false
+                else
+                    if part.Name ~= "HumanoidRootPart" and not part:FindFirstChildOfClass("Motor6D") then
+                        part.CanCollide = true
+                    end
+                end
+            end
+        end
+    end
+end)
+
+MakeCheckWithKeybindAndInput(gMovement, "Noclip", 42, false, false, 0, function(state)
+    NoclipEnabled = state
+end, nil)
+
+-- 【esp 分頁】
+local espPage = pages["esp"]
+local gEsp = CreateCompactBox(espPage, "esp settings", 140, UDim2.new(0, 0, 0, 10))
+
+MakeSimpleCheck(gEsp, "enabled", 18, false, function(state) EspEnabled = state end)
+MakeSimpleCheck(gEsp, "Rainbow", 45, false, function(state) EspRainbow = state end)
+MakeColorPicker(gEsp, 75, espColor, function(color) espColor = color end)
+
+-- ==========================================
+-- 【misc 分頁】高級版兌換碼介面
+-- ==========================================
+local miscPage = pages["misc"]
+
+local function tween(obj, t, props)
+    TweenService:Create(obj, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+end
+
+-- 卡片本體
+local Card = Instance.new("Frame", miscPage)
+Card.Size = UDim2.new(1, -8, 0, 150)
+Card.Position = UDim2.new(0, 4, 0, 10)
+Card.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+Card.BorderSizePixel = 0
+Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
+
+local CardStroke = Instance.new("UIStroke", Card)
+CardStroke.Thickness = 1.2
+CardStroke.Color = Color3.new(1, 1, 1)
+local CardStrokeGrad = Instance.new("UIGradient", CardStroke)
+CardStrokeGrad.Rotation = 45
+CardStrokeGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 130, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(45, 45, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(170, 100, 255)),
+})
+
+local CardBg = Instance.new("UIGradient", Card)
+CardBg.Rotation = 90
+CardBg.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(26, 26, 36)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 14, 20)),
+})
+
+-- PREMIUM 金色徽章
+local Badge = Instance.new("Frame", Card)
+Badge.Size = UDim2.new(0, 84, 0, 20)
+Badge.Position = UDim2.new(0, 16, 0, 14)
+Badge.BackgroundColor3 = Color3.new(1, 1, 1)
+Badge.BorderSizePixel = 0
+Instance.new("UICorner", Badge).CornerRadius = UDim.new(1, 0)
+local BadgeGrad = Instance.new("UIGradient", Badge)
+BadgeGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 214, 102)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(235, 160, 60)),
+})
+local BadgeText = Instance.new("TextLabel", Badge)
+BadgeText.Size = UDim2.new(1, 0, 1, 0)
+BadgeText.BackgroundTransparency = 1
+BadgeText.Text = "★ PREMIUM"
+BadgeText.TextColor3 = Color3.fromRGB(40, 28, 8)
+BadgeText.Font = Enum.Font.GothamBold
+BadgeText.TextSize = 10
+
+-- 標題 & 說明
+local Title = Instance.new("TextLabel", Card)
+Title.Size = UDim2.new(1, -32, 0, 20)
+Title.Position = UDim2.new(0, 16, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "Redeem your key"
+Title.TextColor3 = Color3.fromRGB(240, 240, 245)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 15
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local Sub = Instance.new("TextLabel", Card)
+Sub.Size = UDim2.new(1, -32, 0, 14)
+Sub.Position = UDim2.new(0, 16, 0, 60)
+Sub.BackgroundTransparency = 1
+Sub.Text = "Enter your license key to unlock premium features"
+Sub.TextColor3 = Color3.fromRGB(130, 130, 145)
+Sub.Font = Enum.Font.Gotham
+Sub.TextSize = 11
+Sub.TextXAlignment = Enum.TextXAlignment.Left
+
+-- 輸入框容器
+local InputFrame = Instance.new("Frame", Card)
+InputFrame.Size = UDim2.new(1, -32, 0, 42)
+InputFrame.Position = UDim2.new(0, 16, 0, 84)
+InputFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+InputFrame.BorderSizePixel = 0
+Instance.new("UICorner", InputFrame).CornerRadius = UDim.new(0, 9)
+
+local InputStroke = Instance.new("UIStroke", InputFrame)
+InputStroke.Thickness = 1
+InputStroke.Color = Color3.fromRGB(48, 48, 62)
+
+local ChatInput = Instance.new("TextBox", InputFrame)
+ChatInput.Size = UDim2.new(1, -112, 1, 0)
+ChatInput.Position = UDim2.new(0, 14, 0, 0)
+ChatInput.BackgroundTransparency = 1
+ChatInput.PlaceholderText = "XXXX-XXXX-XXXX-XXXX"
+ChatInput.PlaceholderColor3 = Color3.fromRGB(95, 95, 110)
+ChatInput.Text = ""
+ChatInput.TextColor3 = Color3.fromRGB(235, 235, 240)
+ChatInput.TextXAlignment = Enum.TextXAlignment.Left
+ChatInput.Font = Enum.Font.GothamMedium
+ChatInput.TextSize = 13
+ChatInput.ClearTextOnFocus = false
+
+ChatInput.Focused:Connect(function()
+    tween(InputStroke, 0.2, { Color = Color3.fromRGB(90, 130, 255) })
+end)
+ChatInput.FocusLost:Connect(function()
+    tween(InputStroke, 0.2, { Color = Color3.fromRGB(48, 48, 62) })
+end)
+
+-- Redeem 按鈕（漸層）
+local SendBtn = Instance.new("TextButton", InputFrame)
+SendBtn.Size = UDim2.new(0, 88, 0, 30)
+SendBtn.Position = UDim2.new(1, -96, 0.5, -15)
+SendBtn.BackgroundColor3 = Color3.new(1, 1, 1)
+SendBtn.AutoButtonColor = false
+SendBtn.BorderSizePixel = 0
+SendBtn.Text = "Redeem  ➜"
+SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendBtn.Font = Enum.Font.GothamBold
+SendBtn.TextSize = 12
+Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 7)
+
+local BtnGrad = Instance.new("UIGradient", SendBtn)
+BtnGrad.Rotation = 0
+BtnGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 130, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 90, 255)),
+})
+
+local BtnScale = Instance.new("UIScale", SendBtn)
+SendBtn.MouseEnter:Connect(function() tween(BtnScale, 0.15, { Scale = 1.05 }) end)
+SendBtn.MouseLeave:Connect(function() tween(BtnScale, 0.15, { Scale = 1 }) end)
+SendBtn.MouseButton1Down:Connect(function() tween(BtnScale, 0.08, { Scale = 0.95 }) end)
+SendBtn.MouseButton1Up:Connect(function() tween(BtnScale, 0.1, { Scale = 1.05 }) end)
+
+-- 狀態提示
+local Status = Instance.new("TextLabel", Card)
+Status.Size = UDim2.new(1, -32, 0, 14)
+Status.Position = UDim2.new(0, 16, 1, -20)
+Status.BackgroundTransparency = 1
+Status.Text = ""
+Status.TextColor3 = Color3.fromRGB(130, 130, 145)
+Status.Font = Enum.Font.Gotham
+Status.TextSize = 11
+Status.TextXAlignment = Enum.TextXAlignment.Left
+
+local function setStatus(text, color)
+    Status.Text = text
+    Status.TextColor3 = color
+    Status.TextTransparency = 0
+    task.delay(3, function()
+        if Status.Text == text then tween(Status, 0.4, { TextTransparency = 1 }) end
+    end)
+end
+
+SendBtn.MouseButton1Click:Connect(function()
+    local key = ChatInput.Text
+    if key == "" then
+        setStatus("● Please enter a key first", Color3.fromRGB(230, 90, 90))
+        tween(InputStroke, 0.15, { Color = Color3.fromRGB(230, 90, 90) })
+        task.delay(0.6, function()
+            tween(InputStroke, 0.3, { Color = Color3.fromRGB(48, 48, 62) })
+        end)
+        return
+    end
+    print("[Premium] 嘗試兌換 Key: " .. key)
+    setStatus("● Verifying key...", Color3.fromRGB(110, 150, 255))
+    ChatInput.Text = ""
+end)
+
+-- ==========================================
+-- 關閉確認彈窗 & 關閉所有功能
+-- ==========================================
+local function closeAllFunctions()
+    EspEnabled = false
+    for _, v in pairs(espGui:GetChildren()) do
+        if v:IsA("Frame") then v:Destroy() end
+    end
+
+    FlyEnabled = false
+    if LP.Character then
+        local hum = LP.Character:FindFirstChildOfClass("Humanoid")
+        local hrp = LP.Character:FindFirstChild("HumanoidRootPart")
+        if hum then hum.PlatformStand = false end
+        if hrp then hrp.Velocity = Vector3.new(0, 0, 0) end
+    end
+
+    NoclipEnabled = false
+    stopAntiHit()
+    AuraEnabled = false
+    AuraEngine.Unload()
+
+    pcall(function() sg:Destroy() end)
+    pcall(function() espGui:Destroy() end)
+end
+
+local function showCloseConfirm()
+    if sg:FindFirstChild("CloseConfirm") then return end
+
+    local confirmGui = Instance.new("Frame", sg)
+    confirmGui.Name = "CloseConfirm"
+    confirmGui.Size = UDim2.new(0, 280, 0, 130)
+    confirmGui.Position = UDim2.new(0.5, -140, 0.5, -65)
+    confirmGui.BackgroundColor3 = bgColor
+    confirmGui.BorderColor3 = borderColor
+    confirmGui.BorderSizePixel = 1
+    confirmGui.ZIndex = 100
+
+    local msg = Instance.new("TextLabel", confirmGui)
+    msg.Size = UDim2.new(1, -20, 0, 50)
+    msg.Position = UDim2.new(0, 10, 0, 15)
+    msg.BackgroundTransparency = 1
+    msg.Text = "确定要关闭面板并停止所有功能吗？"
+    msg.TextColor3 = textColor
+    msg.Font = Enum.Font.Code
+    msg.TextSize = 13
+    msg.TextWrapped = true
+    msg.ZIndex = 101
+
+    local yesBtn = Instance.new("TextButton", confirmGui)
+    yesBtn.Size = UDim2.new(0, 110, 0, 28)
+    yesBtn.Position = UDim2.new(0, 15, 1, -40)
+    yesBtn.BackgroundColor3 = Color3.fromRGB(60, 130, 70)
+    yesBtn.BorderColor3 = borderColor
+    yesBtn.BorderSizePixel = 1
+    yesBtn.Text = "确定关闭"
+    yesBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    yesBtn.Font = Enum.Font.Code
+    yesBtn.TextSize = 12
+    yesBtn.ZIndex = 101
+    yesBtn.MouseButton1Click:Connect(function()
+        confirmGui:Destroy()
+        closeAllFunctions()
+    end)
+
+    local noBtn = Instance.new("TextButton", confirmGui)
+    noBtn.Size = UDim2.new(0, 110, 0, 28)
+    noBtn.Position = UDim2.new(1, -125, 1, -40)
+    noBtn.BackgroundColor3 = Color3.fromRGB(120, 50, 50)
+    noBtn.BorderColor3 = borderColor
+    noBtn.BorderSizePixel = 1
+    noBtn.Text = "取消"
+    noBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    noBtn.Font = Enum.Font.Code
+    noBtn.TextSize = 12
+    noBtn.ZIndex = 101
+    noBtn.MouseButton1Click:Connect(function()
+        confirmGui:Destroy()
+    end)
+end
+
+CloseBtn.MouseButton1Click:Connect(showCloseConfirm)
+
+-- ==========================================
+-- RightShift 開關面板
+-- ==========================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightShift then
+        Main.Visible = not Main.Visible
+    end
+end)
+
+print("Qzless 载入成功！")
